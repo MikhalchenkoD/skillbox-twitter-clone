@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  fastapi_app:
+    build:
+      context: .
+      dockerfile: fastapi/Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - my_network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - fastapi_app
+    networks:
+      - my_network
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: twitter
+    ports:
+      - "5432:5432"
+    networks:
+      - my_network
+
+networks:
+  my_network:
