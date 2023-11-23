@@ -10,7 +10,7 @@
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">
       <list>
-        <option value="$MODULE_DIR$/fastapi" />
+        <option value="$USER_HOME$/PycharmProjects/skillbox-twitter-clone/fastapi" />
       </list>
     </option>
   </component>

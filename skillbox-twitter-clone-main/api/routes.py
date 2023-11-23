@@ -3,13 +3,18 @@ import shutil
 from starlette.responses import FileResponse
 from fastapi import FastAPI, Form, Header, UploadFile, File
 import uvicorn
-from methods import generate_good_response, generate_error_response, generate_tweet_data, generate_user_data
+from methods import (
+    generate_good_response,
+    generate_error_response,
+    generate_tweet_data,
+    generate_user_data,
+)
 from models import create_database_tables, session, Users, Tweets, Medias
 from schemas import TweetData
 
 app = FastAPI()
 
-GOOD_RESPONSE = {'result': True}
+GOOD_RESPONSE = {"result": True}
 UPLOAD_FOLDER = "uploadfile"
 
 
@@ -19,11 +24,15 @@ async def get_file(file_name: str):
     return FileResponse(file_path)
 
 
-@app.post('/api/tweets')
+@app.post("/api/tweets")
 def create_new_tweet(tweet_data: TweetData, api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
-        media = session.query(Medias).filter(Medias.id.in_(tweet_data.tweet_media_ids)).all()
+        media = (
+            session.query(Medias)
+            .filter(Medias.id.in_(tweet_data.tweet_media_ids))
+            .all()
+        )
         if not user:
             return generate_error_response("UserNotFound", "User not found")
 
@@ -36,33 +45,39 @@ def create_new_tweet(tweet_data: TweetData, api_key: str = Header(None)):
 
         session_obj.add(new_tweet)
         session.commit()
-        return generate_good_response('tweet_id', new_tweet.id)
+        return generate_good_response("tweet_id", new_tweet.id)
 
 
-@app.post('/api/medias')
+@app.post("/api/medias")
 async def download_file_from_tweet(file: UploadFile = File(...)):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
 
-    with open(file_path, 'wb') as buffer:
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     with session as session_obj:
-        new_media = Medias(file_name=file.filename, file_src=f'api/{file_path}')
+        new_media = Medias(file_name=file.filename, file_src=f"api/{file_path}")
         session_obj.add(new_media)
         session_obj.commit()
 
-        return {'result': True, 'media_id': new_media.id}
+        return {"result": True, "media_id": new_media.id}
 
 
-@app.delete('/api/tweets/{id}')
+@app.delete("/api/tweets/{id}")
 def delete_tweet_by_id(id: int, api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
-        tweet = session_obj.query(Tweets).filter(Tweets.id == id, Tweets.author_id == user.id).first()
+        tweet = (
+            session_obj.query(Tweets)
+            .filter(Tweets.id == id, Tweets.author_id == user.id)
+            .first()
+        )
         if not user or not tweet:
-            return generate_error_response("TweetNotFound",
-                                           "Твит не найден или пользователь не имеет прав для удаления")
+            return generate_error_response(
+                "TweetNotFound",
+                "Твит не найден или пользователь не имеет прав для удаления",
+            )
 
         for media in tweet.media:
             tweet.media.remove(media)
@@ -71,7 +86,7 @@ def delete_tweet_by_id(id: int, api_key: str = Header(None)):
         return GOOD_RESPONSE
 
 
-@app.post('/api/tweets/{id}/likes')
+@app.post("/api/tweets/{id}/likes")
 def like_a_tweet(id: int, api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
@@ -87,37 +102,43 @@ def like_a_tweet(id: int, api_key: str = Header(None)):
         return GOOD_RESPONSE
 
 
-@app.delete('/api/tweets/{id}/likes')
+@app.delete("/api/tweets/{id}/likes")
 def delete_like_from_tweet(id: int, api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         tweet = session_obj.query(Tweets).filter(Tweets.id == id).first()
         if not user or not tweet:
-            return generate_error_response("TweetNotFound",
-                                           "Твит не найден или пользователь не имеет прав для удаления")
+            return generate_error_response(
+                "TweetNotFound",
+                "Твит не найден или пользователь не имеет прав для удаления",
+            )
 
         tweet.liked_by_users.remove(user)
         session_obj.commit()
         return GOOD_RESPONSE
 
 
-@app.post('/api/users/{id}/follow')
+@app.post("/api/users/{id}/follow")
 def follow_user(id: int, api_key: str = Header(None)):
     with session as session_obj:
-        user_who_is_following = session_obj.query(Users).filter(Users.api_key == api_key).first()
+        user_who_is_following = (
+            session_obj.query(Users).filter(Users.api_key == api_key).first()
+        )
         user_being_followed_by = session_obj.query(Users).filter(Users.id == id).first()
         if not user_who_is_following or not user_being_followed_by:
             return generate_error_response("UserNotFound", "User not found")
 
-        user_being_followed_by.following.append(user_who_is_following)
+        user_who_is_following.following.append(user_being_followed_by)
         session_obj.commit()
         return GOOD_RESPONSE
 
 
-@app.delete('/api/users/{id}/follow')
+@app.delete("/api/users/{id}/follow")
 def delete_follow_on_user(id: int, api_key: str = Header(None)):
     with session as session_obj:
-        user_who_is_followed = session_obj.query(Users).filter(Users.api_key == api_key).first()
+        user_who_is_followed = (
+            session_obj.query(Users).filter(Users.api_key == api_key).first()
+        )
         user_was_followed_by = session_obj.query(Users).filter(Users.id == id).first()
         if not user_who_is_followed or not user_was_followed_by:
             return generate_error_response("UserNotFound", "User not found")
@@ -128,7 +149,7 @@ def delete_follow_on_user(id: int, api_key: str = Header(None)):
         return GOOD_RESPONSE
 
 
-@app.get('/api/tweets')
+@app.get("/api/tweets")
 def get_tweets_list(api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
@@ -136,10 +157,10 @@ def get_tweets_list(api_key: str = Header(None)):
         if not user:
             return generate_error_response("UserNotFound", "User not found")
         tweets_data = [generate_tweet_data(tweet) for tweet in tweets]
-        return generate_good_response('tweets', tweets_data)
+        return generate_good_response("tweets", tweets_data)
 
 
-@app.get('/api/users/me')
+@app.get("/api/users/me")
 def get_this_user_profile(api_key: str = Header(None)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
@@ -148,10 +169,10 @@ def get_this_user_profile(api_key: str = Header(None)):
 
         user_info = generate_user_data(user)
 
-        return generate_good_response('user', user_info)
+        return generate_good_response("user", user_info)
 
 
-@app.get('/api/users/{id}')
+@app.get("/api/users/{id}")
 def get_user_by_id(id: int):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.id == id).first()
@@ -161,12 +182,13 @@ def get_user_by_id(id: int):
 
         user_info = generate_user_data(user)
 
-        return generate_good_response('user', user_info)
+        return generate_good_response("user", user_info)
 
 
 # ТЕСТОВЫЕ
 
-@app.post('/users')
+
+@app.post("/users")
 async def create_new_user(name: str = Form(...), api_key: str = Form(...)):
     new_data = Users(name=name, api_key=api_key)
     session.add(new_data)
@@ -174,7 +196,7 @@ async def create_new_user(name: str = Form(...), api_key: str = Form(...)):
     session.close()
 
 
-@app.delete('/users/{id}')
+@app.delete("/users/{id}")
 def delete_user(id: int):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.id == id).first()

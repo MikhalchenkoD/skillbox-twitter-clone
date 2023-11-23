@@ -4,7 +4,7 @@ services:
   fastapi_app:
     build:
       context: .
-      dockerfile: fastapi/Dockerfile
+      dockerfile: api/Dockerfile
     ports:
       - "8000:8000"
     networks:
