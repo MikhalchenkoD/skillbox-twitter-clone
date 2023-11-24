@@ -1,20 +1,12 @@
 from sqlalchemy import Column, Integer, String, create_engine, ForeignKey, Table
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
-# Параметры подключения
-user = 'postgres'
-password = 'admin'
-host = 'localhost'
-port = '5432'
-database = 'twitter'
-
-# Строка подключения к PostgreSQL
-connection_string = f'postgresql+psycopg2://{user}:{password}@postgres:{port}/{database}'
+connection_string = 'postgresql+psycopg2://postgres:admin@postgres:5432/twitter'
 engine = create_engine(connection_string)
-Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
 
+Base = declarative_base()
 
 followers = Table('followers',
                   Base.metadata,
@@ -37,8 +29,7 @@ tweet_media_association = Table('tweet_media_association', Base.metadata,
 class Medias(Base):
     __tablename__ = 'medias'
     id = Column(Integer, primary_key=True)
-    file_src = Column(String)  # Изменили на file_src, так как это у вас есть
-    # Добавили новое поле для file_name
+    file_src = Column(String)
     file_name = Column(String)
 
 
@@ -50,6 +41,7 @@ class Users(Base):
                              primaryjoin=(followers.c.following_id == id),
                              secondaryjoin=(followers.c.follower_id == id),
                              backref='following')
+
     api_key = Column(String(), nullable=None)
     authored_tweets = relationship('Tweets', backref='author', foreign_keys='Tweets.author_id')
 
@@ -59,7 +51,7 @@ class Tweets(Base):
     id = Column(Integer, primary_key=True)
     content = Column(String, nullable=False)
     media = relationship('Medias', secondary=tweet_media_association, backref='tweets')
-    author_id = Column(Integer, ForeignKey('users.id'))  # Внешний ключ на id автора
+    author_id = Column(Integer, ForeignKey('users.id'))
     liked_by_users = relationship('Users', secondary=likes, backref='liked_tweets')
 
 
