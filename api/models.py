@@ -68,7 +68,7 @@ class Tweets(Base):
 def create_database_tables():
     connection = engine.connect()
     if not engine.dialect.has_table(
-            connection, Users.__tablename__
+        connection, Users.__tablename__
     ) and not engine.dialect.has_table(connection, Tweets.__tablename__):
         Base.metadata.create_all(engine)
     connection.close()

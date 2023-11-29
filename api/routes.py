@@ -25,7 +25,9 @@ async def get_file_from_dir(file_name: str):
 
 
 @app.post("/api/tweets")
-def create_new_tweet(tweet_data: TweetIn, api_key: str = Header(None),  session = Depends(get_session)):
+def create_new_tweet(
+    tweet_data: TweetIn, api_key: str = Header(None), session=Depends(get_session)
+):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         media = (
@@ -49,7 +51,9 @@ def create_new_tweet(tweet_data: TweetIn, api_key: str = Header(None),  session 
 
 
 @app.post("/api/medias")
-async def download_file_from_tweet(file: UploadFile = File(...), session = Depends(get_session)):
+async def download_file_from_tweet(
+    file: UploadFile = File(...), session=Depends(get_session)
+):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
 
@@ -65,7 +69,9 @@ async def download_file_from_tweet(file: UploadFile = File(...), session = Depen
 
 
 @app.delete("/api/tweets/{id}")
-def delete_tweet_by_id(id: int, api_key: str = Header(None), session = Depends(get_session)):
+def delete_tweet_by_id(
+    id: int, api_key: str = Header(None), session=Depends(get_session)
+):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         tweet = (
@@ -87,7 +93,7 @@ def delete_tweet_by_id(id: int, api_key: str = Header(None), session = Depends(g
 
 
 @app.post("/api/tweets/{id}/likes")
-def like_a_tweet(id: int, api_key: str = Header(None), session = Depends(get_session)):
+def like_a_tweet(id: int, api_key: str = Header(None), session=Depends(get_session)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         tweet = session_obj.query(Tweets).filter(Tweets.id == id).first()
@@ -103,7 +109,9 @@ def like_a_tweet(id: int, api_key: str = Header(None), session = Depends(get_ses
 
 
 @app.delete("/api/tweets/{id}/likes")
-def delete_like_from_tweet(id: int, api_key: str = Header(None), session = Depends(get_session)):
+def delete_like_from_tweet(
+    id: int, api_key: str = Header(None), session=Depends(get_session)
+):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         tweet = session_obj.query(Tweets).filter(Tweets.id == id).first()
@@ -119,7 +127,7 @@ def delete_like_from_tweet(id: int, api_key: str = Header(None), session = Depen
 
 
 @app.post("/api/users/{id}/follow")
-def follow_user(id: int, api_key: str = Header(None), session = Depends(get_session)):
+def follow_user(id: int, api_key: str = Header(None), session=Depends(get_session)):
     with session as session_obj:
         user_who_is_following = (
             session_obj.query(Users).filter(Users.api_key == api_key).first()
@@ -134,7 +142,9 @@ def follow_user(id: int, api_key: str = Header(None), session = Depends(get_sess
 
 
 @app.delete("/api/users/{id}/follow")
-def delete_follow_on_user(id: int, api_key: str = Header(None), session = Depends(get_session)):
+def delete_follow_on_user(
+    id: int, api_key: str = Header(None), session=Depends(get_session)
+):
     with session as session_obj:
         user_who_is_followed = (
             session_obj.query(Users).filter(Users.api_key == api_key).first()
@@ -150,7 +160,7 @@ def delete_follow_on_user(id: int, api_key: str = Header(None), session = Depend
 
 
 @app.get("/api/tweets")
-def get_tweets_list(api_key: str = Header(None), session = Depends(get_session)):
+def get_tweets_list(api_key: str = Header(None), session=Depends(get_session)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         tweets = session_obj.query(Tweets).all()
@@ -161,7 +171,7 @@ def get_tweets_list(api_key: str = Header(None), session = Depends(get_session))
 
 
 @app.get("/api/users/me")
-def get_this_user_profile(api_key: str = Header(None), session = Depends(get_session)):
+def get_this_user_profile(api_key: str = Header(None), session=Depends(get_session)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.api_key == api_key).first()
         if not user:
@@ -173,7 +183,7 @@ def get_this_user_profile(api_key: str = Header(None), session = Depends(get_ses
 
 
 @app.get("/api/users/{id}")
-def get_user_by_id(id: int, session = Depends(get_session)):
+def get_user_by_id(id: int, session=Depends(get_session)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.id == id).first()
 
@@ -189,7 +199,9 @@ def get_user_by_id(id: int, session = Depends(get_session)):
 
 
 @app.post("/users")
-async def create_new_user(name: str = Form(...), api_key: str = Form(...), session = Depends(get_session)):
+async def create_new_user(
+    name: str = Form(...), api_key: str = Form(...), session=Depends(get_session)
+):
     new_data = Users(name=name, api_key=api_key)
     session.add(new_data)
     session.commit()
@@ -197,7 +209,7 @@ async def create_new_user(name: str = Form(...), api_key: str = Form(...), sessi
 
 
 @app.delete("/users/{id}")
-def delete_user(id: int, session = Depends(get_session)):
+def delete_user(id: int, session=Depends(get_session)):
     with session as session_obj:
         user = session_obj.query(Users).filter(Users.id == id).first()
         session_obj.delete(user)

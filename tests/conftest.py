@@ -31,8 +31,8 @@ def create_tables():
 @pytest.fixture(scope="session", autouse=True)
 def create_users():
     with TestingSessionLocal() as session:
-        first_user = Users(name='Дмитрий', api_key='test')
-        second_user = Users(name='Андрей', api_key='test1')
+        first_user = Users(name="Дмитрий", api_key="test")
+        second_user = Users(name="Андрей", api_key="test1")
 
         session.add(first_user)
         session.add(second_user)
